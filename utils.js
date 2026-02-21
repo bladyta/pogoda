@@ -25,7 +25,7 @@ function showNotification(message, type = 'info') {
 // Funkcja generująca opcje temperatur
 function generateTempOptions() {
     let options = '';
-    for (let i = -15; i <= 40; i++) {
+    for (let i = -20; i <= 40; i++) {
         options += `<option value="${i}">${i}</option>`;
     }
     return options;
