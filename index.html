@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generator Plików Pogodowych</title>
+  <!-- Ładujemy czcionkę Lato -->
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <!-- Dodajemy Weather Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css">
+  <!-- Dodajemy Font Awesome dla dodatkowych ikon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="header-content">
+      <h2>Generator plików pogodowych – Wprowadź wartości i zapisz plik</h2>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card table-container">
+      <table id="weather-table">
+        <thead>
+          <tr>
+            <th>Lp.</th>
+            <th>Miasto</th>
+            <th>Warunki w nocy</th>
+            <th>Temp. w nocy (°C)</th>
+            <th>Warunki w dzień</th>
+            <th>Temp. w dzień (°C)</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Sekcja z mapami – NOC po lewej, DZIEŃ po prawej -->
+    <!-- UWAGA: plik Poland_-_shape.svg musi być w tym samym folderze co index.html -->
+    <div class="map-container">
+      <div class="map-wrapper">
+        <h3>NOC</h3>
+        <div class="map night-map">
+          <img src="Poland_-_shape.svg" alt="Mapa Polski - noc">
+        </div>
+        <!-- Legenda zostanie dodana tutaj przez JavaScript -->
+      </div>
+      <div class="map-wrapper">
+        <h3>DZIEŃ</h3>
+        <div class="map day-map">
+          <img src="Poland_-_shape.svg" alt="Mapa Polski - dzień">
+        </div>
+        <!-- Legenda zostanie dodana tutaj przez JavaScript -->
+      </div>
+    </div>
+
+    <!-- Sekcja z przyciskami -->
+    <div class="buttons">
+      <button id="loadFileBtn" class="interactive-element">
+        <i class="fas fa-file-upload"></i> Wczytaj plik
+      </button>
+      <button id="importWeatherBtn" class="interactive-element">
+        <i class="fas fa-cloud-upload-alt"></i> Importuj dane pogodowe
+      </button>
+      <!-- Nowy przycisk do wklejania JSON -->
+      <button id="pasteJSONBtn" class="interactive-element">
+        <i class="fas fa-paste"></i> Wklej JSON
+      </button>
+      <button id="generateTxtBtn" class="interactive-element">
+        <i class="fas fa-file-alt"></i> Generuj TXT
+      </button>
+      <button id="generateXMLBtn" class="interactive-element">
+        <i class="fas fa-file-code"></i> Generuj XML
+      </button>
+      <button id="generateJSONBtn" class="interactive-element">
+        <i class="fas fa-file-code"></i> Generuj JSON
+      </button>
+      <button id="exportAllBtn" class="interactive-element">
+        <i class="fas fa-download"></i> Eksportuj wszystko
+      </button>
+      <button id="defaultValuesBtn" class="interactive-element">
+        <i class="fas fa-magic"></i> Wartości domyślne
+      </button>
+      <button id="clearCacheBtn" class="interactive-element">
+        <i class="fas fa-trash"></i> Wyczyść pamięć podręczną
+      </button>
+      <button id="forceRefreshBtn" class="interactive-element">
+        <i class="fas fa-sync-alt"></i> Wymuś odświeżenie
+      </button>
+      <button id="resetBtn" class="interactive-element">
+        <i class="fas fa-trash-alt"></i> Resetuj dane
+      </button>
+      <input type="file" id="loadFileInput" accept=".json,.txt" style="display: none;">
+      <input type="file" id="importWeatherInput" accept=".json" style="display: none;">
+    </div>
+  </div>
+
+  <!-- Ładowanie skryptów JS - najpierw moduły, na końcu główny plik aplikacji -->
+  <script src="config.js"></script>
+  <script src="utils.js"></script>
+  <script src="data.js"></script>
+  <script src="ui.js"></script>
+  <script src="maps.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>

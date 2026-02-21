@@ -1,0 +1,738 @@
+:root {
+  /* Jaśniejsza paleta kolorów */
+  --font-family: 'Lato', sans-serif;
+  --background-color: #f8fafc;  /* Jaśniejsze tło */
+  --text-color: #1e293b;  /* Ciemny niebieskoszary dla tekstu */
+  --container-bg: #ffffff;
+  --border-color: #e2e8f0;  /* Jaśniejsze obramowania */
+  --primary-color: #3b82f6;  /* Niebieski */
+  --primary-color-light: #eff6ff;  /* Bardzo jasny niebieski */
+  --accent-color: #dbeafe;  /* Jasny akcent */
+  --transition-speed: 0.3s;
+  --kujawsko-bg: #fee2e2;  /* Bardzo jasny czerwony */
+  --success-color: #22c55e;  /* Jaśniejszy zielony */
+  --error-color: #ef4444;  /* Jasny czerwony */
+  --info-color: #3b82f6;  /* Niebieski */
+  --warning-color: #f59e0b;  /* Pomarańczowy */
+
+  /* Zmienne dla odstępów */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Delikatniejsze cienie */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+  padding: var(--spacing-sm);
+}
+
+/* Płynne animacje dla elementów interaktywnych */
+.interactive-element {
+  transition: all var(--transition-speed) ease-in-out;
+}
+
+/* Nagłówek strony - jaśniejszy gradient */
+.site-header {
+  background: linear-gradient(135deg, #3b82f6, #93c5fd);  /* Jaśniejszy gradient */
+  color: white;
+  padding: var(--spacing-xl) var(--spacing-lg);
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--spacing-lg);
+  border-radius: 8px;
+}
+
+.site-header .header-content h2 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* Efekty dla kart - jaśniejsze i delikatniejsze */
+.card {
+  background: var(--container-bg);
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition-speed) ease, transform var(--transition-speed) ease;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--border-color);  /* Dodane subtelne obramowanie */
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* Kontener główny */
+.container {
+  max-width: 1200px;
+  margin: var(--spacing-lg) auto;
+  padding: var(--spacing-lg);
+  text-align: center;
+}
+
+/* Tabela - jaśniejsza, bez efektu zebry */
+.table-container {
+  overflow-x: auto;
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--container-bg);
+  box-shadow: var(--shadow-md);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: var(--spacing-md);
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+/* Jaśniejsze nagłówki tabeli */
+th {
+  position: sticky;
+  top: 0;
+  background-color: var(--primary-color);
+  color: white;
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+
+/* Usunięto zebra striping dla tabel */
+/* Zamiast tego jednolite tło i delikatny hover */
+table tr {
+  background-color: var(--container-bg);
+}
+
+table tr:hover {
+  background-color: var(--primary-color-light);
+  transition: background-color var(--transition-speed) ease;
+}
+
+/* Poprawiony styl dla selectów, aby były bardziej widoczne */
+td select {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid #94a3b8; /* Ciemniejsze obramowanie dla lepszej widoczności */
+  border-radius: 4px;
+  background-color: white;
+  color: #1e293b; /* Ciemny tekst dla lepszej czytelności */
+  transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+  font-size: 0.95rem; /* Nieco większa czcionka */
+}
+
+td select:hover {
+  border-color: var(--primary-color);
+}
+
+td select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  outline: none;
+}
+
+/* Upewniamy się, że opcje select są widoczne */
+select option {
+  padding: var(--spacing-sm);
+  color: #1e293b;
+  background-color: white;
+  font-size: 0.95rem;
+}
+
+/* Wiersze wyróżniające - jaśniejsze */
+.kujawsko-pomorskie {
+  background-color: var(--kujawsko-bg);
+  color: var(--text-color);
+}
+
+.kujawsko-pomorskie:hover {
+  background-color: #fecaca;  /* Jeszcze jaśniejszy czerwony */
+}
+
+/* Przyciski - jaśniejsze i bardziej kolorowe */
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+button {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: none;
+  border-radius: 6px;  /* Nieco bardziej zaokrąglone */
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #ffffff;
+  transition: background-color var(--transition-speed) ease, transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+  box-shadow: var(--shadow-sm);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+#loadFileBtn {
+  background-color: #f87171;  /* Jaśniejszy czerwony */
+}
+
+#loadFileBtn:hover {
+  background-color: #ef4444;
+}
+
+#generateTxtBtn {
+  background-color: #fbbf24;  /* Jaśniejszy pomarańczowy */
+}
+
+#generateTxtBtn:hover {
+  background-color: #f59e0b;
+}
+
+#generateXMLBtn {
+  background-color: #4ade80;  /* Jaśniejszy zielony */
+}
+
+#generateXMLBtn:hover {
+  background-color: #22c55e;
+}
+
+#generateJSONBtn {
+  background-color: #60a5fa;  /* Jaśniejszy niebieski */
+}
+
+#generateJSONBtn:hover {
+  background-color: #3b82f6;
+}
+
+#exportAllBtn {
+  background-color: #a78bfa;  /* Jaśniejszy fioletowy */
+}
+
+#exportAllBtn:hover {
+  background-color: #8b5cf6;
+}
+
+#defaultValuesBtn {
+  background-color: #2dd4bf;  /* Jaśniejszy turkusowy */
+}
+
+#defaultValuesBtn:hover {
+  background-color: #14b8a6;
+}
+
+#resetBtn {
+  background-color: #94a3b8;  /* Jaśniejszy szary */
+}
+
+#resetBtn:hover {
+  background-color: #64748b;
+}
+
+button:focus,
+select:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Ulepszenia dla formularzy */
+input,
+textarea,
+select {
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  width: 100%;
+  margin-bottom: var(--spacing-md);
+  transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+  background-color: var(--container-bg);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+/* Sekcja map - jaśniejsze tła */
+.map-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  margin: 40px 0 70px;
+}
+
+.map-wrapper {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 500px;
+}
+
+.map-wrapper h3 {
+  margin-bottom: var(--spacing-md);
+  font-size: 1.5rem;
+  font-weight: bold;
+  background-color: var(--primary-color);
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 20px;
+  display: inline-block;
+  box-shadow: var(--shadow-sm);
+}
+
+.map {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  padding: var(--spacing-md);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  margin: 0 auto;
+  transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+
+.map:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Jaśniejsze tła map */
+.night-map {
+  background-color: #1e40af;  /* Jaśniejszy granatowy */
+  border: 2px solid #1e3a8a;
+}
+
+.day-map {
+  background-color: #15803d;  /* Jaśniejszy zielony */
+  border: 2px solid #166534;
+}
+
+.map img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+  filter: brightness(1.1) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Nakładki na mapach - wyraźniejsze */
+.city-overlay {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.95);  /* Jaśniejsze tło */
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 5px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;  /* Ciemniejszy tekst dla kontrastu */
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-speed) ease;
+  z-index: 1;
+}
+
+.city-overlay:hover {
+  background: white;
+  z-index: 10;
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.city-info {
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  margin-top: var(--spacing-xs);
+}
+
+.icon-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 28px;
+}
+
+/* Legenda do mapy - jaśniejsza */
+.map-legend {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  display: inline-block;
+  box-shadow: var(--shadow-md);
+  text-align: left;
+  max-width: 90%;
+  border: 1px solid var(--border-color);
+}
+
+.map-legend h4 {
+  margin-bottom: var(--spacing-sm);
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-xs);
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.legend-list {
+  list-style: none;
+  padding: 0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.legend-icon {
+  margin-right: var(--spacing-sm);
+  font-size: 18px;
+  min-width: 30px;
+  text-align: center;
+}
+
+/* Stylizacja ikon pogodowych - jaśniejsze kolory */
+.wi {
+  color: var(--primary-color);
+  font-size: 24px;
+}
+
+/* Style dla powiadomień - jaśniejsze */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: var(--spacing-md);
+  border-radius: 6px;
+  color: white;
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity var(--transition-speed) ease, transform var(--transition-speed) ease;
+}
+
+.notification.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.notification.success {
+  background-color: var(--success-color);
+}
+
+.notification.error {
+  background-color: var(--error-color);
+}
+
+.notification.info {
+  background-color: var(--info-color);
+}
+
+.notification.warning {
+  background-color: var(--warning-color);
+}
+
+/* Tryb ciemny - można zachować, ale z jaśniejszymi kolorami */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: #1e293b;  /* Jaśniejsze ciemne tło */
+    --text-color: #f1f5f9;
+    --container-bg: #334155;  /* Jaśniejsze tło kontenera */
+    --border-color: #475569;
+    --primary-color: #60a5fa;  /* Jasny niebieski */
+    --primary-color-light: #334155;  /* Jaśniejszy kolor tła */
+    --accent-color: #1e3a8a;
+    --kujawsko-bg: #7f1d1d;  /* Jaśniejsza wersja dla trybu ciemnego */
+  }
+
+  .city-overlay {
+    background: rgba(30, 41, 59, 0.9);  /* Ciemniejsze tło */
+    color: #f8fafc;  /* Biały tekst */
+  }
+
+  .city-info {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+
+  .map-legend {
+    background-color: rgba(30, 41, 59, 0.9);
+    color: #f8fafc;
+  }
+
+  .wi {
+    color: #93c5fd;  /* Jaśniejszy niebieski dla ikon */
+  }
+  
+  /* Dodatkowe style dla trybu ciemnego aby poprawić widoczność select */
+  td select {
+    background-color: #475569;
+    color: #f8fafc;
+    border-color: #64748b;
+  }
+  
+  select option {
+    background-color: #334155;
+    color: #f8fafc;
+  }
+  
+  /* Style dla dialogu w trybie ciemnym */
+  .paste-dialog {
+    background-color: #334155;
+    color: #f8fafc;
+  }
+  
+  #json-paste-area {
+    background-color: #475569;
+    color: #f8fafc;
+    border-color: #64748b;
+  }
+}
+
+/* Pozostała responsywność */
+@media print {
+  body {
+    background-color: #fff;
+    color: #000;
+  }
+
+  .buttons {
+    display: none;
+  }
+
+  .table-container {
+    border: none;
+    box-shadow: none;
+  }
+
+  .notification {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .site-header {
+    padding: var(--spacing-md);
+  }
+
+  .site-header .header-content h2 {
+    font-size: 1.5rem;
+  }
+
+  .container {
+    padding: var(--spacing-sm);
+  }
+
+  table,
+  th,
+  td {
+    font-size: 0.9rem;
+  }
+
+  th, td {
+    padding: var(--spacing-sm);
+  }
+
+  button {
+    font-size: 0.9rem;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .map-container {
+    flex-direction: column;
+    gap: var(--spacing-xl);
+  }
+
+  .map-wrapper {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .map {
+    max-width: 90%;
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .city-overlay {
+    font-size: 0.8rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .site-header .header-content h2 {
+    font-size: 1.2rem;
+  }
+  
+  .buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  button {
+    width: 80%;
+  }
+}
+#importWeatherBtn {
+  background-color: #3182ce;  /* Niebieski */
+}
+
+#importWeatherBtn:hover {
+  background-color: #2c5282;  /* Ciemniejszy niebieski */
+}
+#clearCacheBtn {
+  background-color: #9333ea;  /* Fioletowy */
+}
+
+#clearCacheBtn:hover {
+  background-color: #7e22ce;  /* Ciemniejszy fioletowy */
+}
+/* Style dla nowych przycisków */
+#pasteJSONBtn {
+  background-color: #38b2ac;
+  /* Turkusowy */
+}
+
+#pasteJSONBtn:hover {
+  background-color: #2c7a7b;
+  /* Ciemniejszy turkusowy */
+}
+
+#forceRefreshBtn {
+  background-color: #805ad5;
+  /* Fioletowy */
+}
+
+#forceRefreshBtn:hover {
+  background-color: #6b46c1;
+  /* Ciemniejszy fioletowy */
+}
+
+/* Style dla dialogu wklejania JSON */
+.paste-dialog-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.paste-dialog {
+  background-color: #1a202c;
+  color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  width: 80%;
+  max-width: 600px;
+  border: 1px solid #4a5568;
+}
+
+.paste-dialog h3 {
+  margin-bottom: 15px;
+  color: #90cdf4;
+  font-size: 1.3rem;
+}
+
+.paste-dialog p {
+  color: #e2e8f0;
+  margin-bottom: 15px;
+}
+
+#json-paste-area {
+  width: 100%;
+  margin: 10px 0;
+  padding: 12px;
+  font-family: monospace;
+  resize: vertical;
+  background-color: #2d3748;
+  color: #ffffff;
+  border: 1px solid #4a5568;
+  border-radius: 4px;
+  font-size: 14px;
+  min-height: 150px;
+}
+
+#json-paste-area:focus {
+  outline: none;
+  border-color: #63b3ed;
+  box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.3);
+}
+
+.dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.dialog-buttons button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+#paste-json-cancel {
+  background-color: #4a5568;
+  color: white;
+}
+
+#paste-json-cancel:hover {
+  background-color: #2d3748;
+}
+
+#paste-json-confirm {
+  background-color: #3182ce;
+  color: white;
+}
+
+#paste-json-confirm:hover {
+  background-color: #2c5282;
+}
