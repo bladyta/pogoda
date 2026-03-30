@@ -8,12 +8,10 @@ function showNotification(message, type = 'info') {
 
     document.body.appendChild(notification);
 
-    // Animacja pojawienia się
     setTimeout(() => {
         notification.classList.add('show');
     }, 10);
 
-    // Zniknięcie po 3 sekundach
     setTimeout(() => {
         notification.classList.remove('show');
         setTimeout(() => {
@@ -33,44 +31,45 @@ function generateTempOptions() {
 
 // Funkcja walidacji danych
 function validateWeatherData(data) {
-    if (!data || typeof data !== 'object') {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
         return { valid: false, message: 'Nieprawidłowa struktura danych' };
     }
 
-    // Sprawdź, czy wszystkie miasta mają właściwe wartości
     for (const city in data) {
         const cityData = data[city];
 
-        if (!cityData || typeof cityData !== 'object') {
+        if (!cityData || typeof cityData !== 'object' || Array.isArray(cityData)) {
             return { valid: false, message: `Nieprawidłowe dane dla miasta: ${city}` };
         }
 
-        // Sprawdź wymagane pola
-        if (!('tempDay' in cityData) || !('tempNight' in cityData) ||
-            !('conditionDay' in cityData) || !('conditionNight' in cityData)) {
+        if (
+            !('tempDay' in cityData) ||
+            !('tempNight' in cityData) ||
+            !('conditionDay' in cityData) ||
+            !('conditionNight' in cityData)
+        ) {
             return { valid: false, message: `Brakujące dane dla miasta: ${city}` };
         }
 
-        // Sprawdź zakres temperatur
-        const tempDay = parseInt(cityData.tempDay);
-        const tempNight = parseInt(cityData.tempNight);
+        const tempDay = parseInt(cityData.tempDay, 10);
+        const tempNight = parseInt(cityData.tempNight, 10);
 
-        if (isNaN(tempDay) || tempDay < -15 || tempDay > 30) {
+        // Zakres zgodny z generateTempOptions()
+        if (isNaN(tempDay) || tempDay < -20 || tempDay > 40) {
             return { valid: false, message: `Nieprawidłowa temperatura dzienna dla miasta: ${city}` };
         }
 
-        if (isNaN(tempNight) || tempNight < -15 || tempNight > 30) {
+        if (isNaN(tempNight) || tempNight < -20 || tempNight > 40) {
             return { valid: false, message: `Nieprawidłowa temperatura nocna dla miasta: ${city}` };
         }
 
-        // Sprawdź warunki pogodowe
-        const validConditions = weatherConditions.map(cond => cond.value);
+        const validConditions = weatherConditions.map(cond => String(cond.value));
 
-        if (!validConditions.includes(cityData.conditionDay)) {
+        if (!validConditions.includes(String(cityData.conditionDay))) {
             return { valid: false, message: `Nieprawidłowy warunek dzienny dla miasta: ${city}` };
         }
 
-        if (!validConditions.includes(cityData.conditionNight)) {
+        if (!validConditions.includes(String(cityData.conditionNight))) {
             return { valid: false, message: `Nieprawidłowy warunek nocny dla miasta: ${city}` };
         }
     }
@@ -80,14 +79,17 @@ function validateWeatherData(data) {
 
 // Funkcja usuwająca polskie znaki
 function removePolishCharacters(str) {
-    const polishChars = { 'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'Ł': 'L', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z' };
+    const polishChars = {
+        'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'Ł': 'L',
+        'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z'
+    };
     return str.replace(/[ąćęłńóśźżŁ]/g, match => polishChars[match]);
 }
 
-// Funkcja upraszczająca nazwę do porównywania (usuwa polskie znaki, zamienia na małe litery)
+// Funkcja upraszczająca nazwę do porównywania
 function simplifyName(name) {
     if (!name) return '';
-    
+
     return name.toLowerCase()
         .replace(/ą/g, 'a')
         .replace(/ć/g, 'c')
@@ -102,7 +104,6 @@ function simplifyName(name) {
 
 // Pomocnicza funkcja do normalizacji nazw miast
 function normalizeCity(cityName) {
-    // Mapa polskich nazw miast na oczekiwane nazwy w aplikacji
     const cityMapping = {
         "Gdansk": "Gdańsk",
         "Zielona Gora": "Zielona Góra",
@@ -117,13 +118,11 @@ function normalizeCity(cityName) {
         "Grudziadz": "Grudziądz",
         "Bialystok": "Białystok"
     };
-    
-    // Sprawdź, czy mamy mapowanie dla tego miasta
+
     if (cityMapping[cityName]) {
         return cityMapping[cityName];
     }
-    
-    // Jeśli nie mamy mapowania, zwróć oryginalną nazwę
+
     return cityName;
 }
 
