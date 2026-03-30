@@ -44,24 +44,24 @@ function forceClearLocalStorage() {
 // Funkcja do aktualizacji danych pogodowych
 function updateWeatherData() {
     const rows = document.querySelectorAll('#table-body tr');
-    
+
     try {
         rows.forEach(row => {
             if (!row || !row.cells || row.cells.length < 6) return;
-            
+
             const city = row.cells[1].innerText;
             const selectNight = row.cells[2].querySelector('select');
             const selectTempNight = row.cells[3].querySelector('select');
             const selectDay = row.cells[4].querySelector('select');
             const selectTempDay = row.cells[5].querySelector('select');
-            
+
             if (!selectNight || !selectTempNight || !selectDay || !selectTempDay) return;
-            
+
             const conditionNight = selectNight.value;
             const tempNight = selectTempNight.value;
             const conditionDay = selectDay.value;
             const tempDay = selectTempDay.value;
-            
+
             weatherData[city] = { tempDay, tempNight, conditionDay, conditionNight };
         });
     } catch (error) {
@@ -94,16 +94,13 @@ function loadFromLocalStorage() {
             } else {
                 console.error('Nieprawidłowe dane w localStorage:', validationResult.message);
                 showNotification('Błąd wczytywania zapisanych danych', 'error');
-                // W przypadku błędu, zainicjuj pustą tabelę
                 populateTable();
             }
         } else {
-            // Brak danych w localStorage, zainicjuj pustą tabelę
             populateTable();
         }
     } catch (error) {
         console.error('Błąd podczas wczytywania z localStorage:', error);
-        // W przypadku błędu, zainicjuj pustą tabelę
         populateTable();
     }
 }
@@ -114,8 +111,7 @@ function clearLocalStorage() {
         if (confirm('Czy na pewno chcesz wyczyścić pamięć podręczną? Spowoduje to usunięcie zapisanych danych pogodowych.')) {
             localStorage.removeItem('weatherData');
             showNotification('Pamięć podręczna została wyczyszczona', 'info');
-            
-            // Wyczyść dane w aplikacji i zresetuj tabelę
+
             weatherData = {};
             populateTable();
         }
@@ -125,13 +121,139 @@ function clearLocalStorage() {
     }
 }
 
+// Pomocnicza funkcja do odczytu zarówno starego, jak i nowego formatu importu
+function extractImportedCityData(data) {
+    const conditionNight = String(data?.["10"] ?? data?.NOC ?? "");
+    const tempNight = String(data?.["1"] ?? data?.min ?? "");
+    let conditionDay = String(data?.DZIEN ?? "");
+    const tempDay = String(data?.max ?? "");
+
+    if (conditionDay.includes('/')) {
+        conditionDay = conditionDay.split('/')[0];
+    }
+
+    return {
+        conditionNight,
+        tempNight,
+        conditionDay,
+        tempDay
+    };
+}
+
+// Pomocnicza funkcja do znajdowania miasta z importu w aplikacji
+function findMatchingCityName(importCityName) {
+    let normalizedCity = normalizeCity(importCityName);
+
+    if (cities.includes(normalizedCity)) {
+        return normalizedCity;
+    }
+
+    const simplifiedImportCityName = simplifyName(importCityName);
+
+    const appCityMap = {};
+    cities.forEach(city => {
+        appCityMap[simplifyName(city)] = city;
+    });
+
+    if (appCityMap[simplifiedImportCityName]) {
+        return appCityMap[simplifiedImportCityName];
+    }
+
+    const foundCity = cities.find(c =>
+        simplifyName(c).includes(simplifiedImportCityName) ||
+        simplifiedImportCityName.includes(simplifyName(c))
+    );
+
+    return foundCity || null;
+}
+
+// Konwersja importowanego payloadu do formatu aplikacji
+function convertImportedWeatherPayload(importedData) {
+    if (!Array.isArray(importedData) || importedData.length === 0) {
+        return {
+            valid: false,
+            message: 'Nieprawidłowy format danych - oczekiwano tablicy'
+        };
+    }
+
+    const cityData = importedData[0];
+    if (!cityData || typeof cityData !== 'object' || Array.isArray(cityData)) {
+        return {
+            valid: false,
+            message: 'Nieprawidłowy format danych miast'
+        };
+    }
+
+    const convertedData = {};
+    let importedCities = 0;
+    let skippedCities = 0;
+    let errorCities = 0;
+
+    for (const city in cityData) {
+        try {
+            const data = cityData[city];
+
+            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                console.warn(`Pomijanie miasta: ${city} (nieprawidłowe dane)`);
+                skippedCities++;
+                continue;
+            }
+
+            const { conditionNight, tempNight, conditionDay, tempDay } = extractImportedCityData(data);
+
+            if (
+                conditionNight === "" ||
+                tempNight === "" ||
+                conditionDay === "" ||
+                tempDay === ""
+            ) {
+                console.warn(`Pomijanie miasta: ${city} (brakujące dane pogodowe)`);
+                skippedCities++;
+                continue;
+            }
+
+            const matchedCity = findMatchingCityName(city);
+            if (!matchedCity) {
+                console.warn(`Pomijanie miasta: ${city} (nie znaleziono odpowiednika w aplikacji)`);
+                skippedCities++;
+                continue;
+            }
+
+            convertedData[matchedCity] = {
+                tempDay: String(tempDay),
+                tempNight: String(tempNight),
+                conditionDay: String(conditionDay),
+                conditionNight: String(conditionNight)
+            };
+
+            importedCities++;
+        } catch (cityError) {
+            console.error(`Błąd przetwarzania miasta ${city}:`, cityError);
+            errorCities++;
+        }
+    }
+
+    if (importedCities === 0) {
+        return {
+            valid: false,
+            message: 'Nie udało się zaimportować żadnych danych',
+            stats: { importedCities, skippedCities, errorCities }
+        };
+    }
+
+    return {
+        valid: true,
+        convertedData,
+        stats: { importedCities, skippedCities, errorCities }
+    };
+}
+
 // Funkcja wczytująca plik
 function loadFile(event) {
     try {
         const file = event.target.files[0];
         if (!file) return;
 
-        // Sprawdzenie rozszerzenia pliku
         const fileExt = file.name.split('.').pop().toLowerCase();
         if (fileExt !== 'json' && fileExt !== 'txt') {
             showNotification('Obsługiwane są tylko pliki JSON i TXT', 'error');
@@ -142,6 +264,8 @@ function loadFile(event) {
         reader.onload = function (e) {
             try {
                 const parsedData = JSON.parse(e.target.result);
+
+                // Najpierw spróbuj wczytać klasyczny format aplikacji
                 const validationResult = validateWeatherData(parsedData);
 
                 if (validationResult.valid) {
@@ -149,6 +273,19 @@ function loadFile(event) {
                     populateTable();
                     saveToLocalStorage();
                     showNotification('Plik wczytany pomyślnie', 'success');
+                    return;
+                }
+
+                // Jeśli to nie jest format aplikacji, spróbuj potraktować go jako import zewnętrzny
+                const importResult = convertImportedWeatherPayload(parsedData);
+
+                if (importResult.valid) {
+                    weatherData = importResult.convertedData;
+                    populateTable();
+                    saveToLocalStorage();
+
+                    const { importedCities, skippedCities } = importResult.stats;
+                    showNotification(`Plik zaimportowany pomyślnie. Zaimportowano ${importedCities} miast, pominięto ${skippedCities}.`, 'success');
                 } else {
                     showNotification(`Błąd walidacji: ${validationResult.message}`, 'error');
                 }
@@ -169,7 +306,7 @@ function loadFile(event) {
     }
 }
 
-// Poprawiona i zabezpieczona funkcja importująca dane pogodowe
+// Import danych pogodowych z pliku JSON
 function importWeatherData(event) {
     try {
         const file = event.target.files[0];
@@ -178,176 +315,49 @@ function importWeatherData(event) {
             return;
         }
 
-        // Zweryfikuj rozszerzenie i MIME typ pliku
         const fileExt = file.name.split('.').pop().toLowerCase();
         if (fileExt !== 'json') {
             showNotification('Obsługiwane są tylko pliki JSON', 'error');
             return;
         }
 
-        // Dla całkowitej pewności, że nie ma konfliktów z poprzednimi danymi
-        forceClearLocalStorage();
-
         const reader = new FileReader();
         reader.onload = function (e) {
             try {
                 let dataText = e.target.result;
 
-                // Usuń BOM jeśli istnieje (problem z kodowaniem UTF-8 z BOM)
                 if (dataText.charCodeAt(0) === 0xFEFF) {
                     dataText = dataText.slice(1);
                 }
 
-                // Sprawdź czy to prawidłowy JSON przed parsowaniem
                 if (!dataText.trim().startsWith('[') && !dataText.trim().startsWith('{')) {
                     showNotification('Plik nie zawiera prawidłowego formatu JSON', 'error');
                     return;
                 }
 
-                // Wyświetl zawartość pliku dla celów diagnostycznych
                 console.log('Zawartość pliku JSON:', dataText.substring(0, 200) + '...');
 
                 const importedData = JSON.parse(dataText);
-                console.log('Parsowanie JSON pomyślne, struktura:', JSON.stringify(importedData).substring(0, 100) + '...');
+                const importResult = convertImportedWeatherPayload(importedData);
 
-                // Sprawdź format danych
-                if (!Array.isArray(importedData) || importedData.length === 0) {
-                    showNotification('Nieprawidłowy format danych - oczekiwano tablicy', 'error');
+                if (!importResult.valid) {
+                    showNotification(importResult.message, 'error');
                     return;
                 }
 
-                // Pobierz pierwszy element tablicy (zawierający dane miast)
-                const cityData = importedData[0];
-                console.log('Liczba miast w danych:', Object.keys(cityData).length);
+                console.log('Zaimportowano:', importResult.convertedData);
+                console.log(
+                    `Statystyki importu: zaimportowano ${importResult.stats.importedCities} miast, ` +
+                    `pominięto ${importResult.stats.skippedCities} miast, ` +
+                    `błędy przy ${importResult.stats.errorCities} miastach`
+                );
 
-                // Przygotuj nowy obiekt danych w formacie aplikacji
-                const convertedData = {};
-                let importedCities = 0;
-                let skippedCities = 0;
-                let errorCities = 0;
+                // Czyścimy dopiero po udanym imporcie
+                forceClearLocalStorage();
 
-                // Przygotujemy mapowanie miast z aplikacji dla łatwiejszego odnajdywania
-                const appCityMap = {};
-                cities.forEach(city => {
-                    // Klucz to uproszczona nazwa (bez polskich znaków, małe litery)
-                    const simplifiedName = simplifyName(city);
-                    appCityMap[simplifiedName] = city;
-                });
-
-                // Iteracja po miastach z pliku
-                for (const city in cityData) {
-                    try {
-                        // Dane miasta z pliku
-                        const data = cityData[city];
-
-                        // Sprawdź czy dane miasta są dostępne
-                        if (!data) {
-                            console.warn(`Miasto ${city}: Brak danych`);
-                            skippedCities++;
-                            continue;
-                        }
-
-                        if (typeof data["10"] === 'undefined') {
-                            console.warn(`Miasto ${city}: Brak wartości "10" (condition_night)`);
-                            skippedCities++;
-                            continue;
-                        }
-
-                        if (typeof data["1"] === 'undefined') {
-                            console.warn(`Miasto ${city}: Brak wartości "1" (temp_night)`);
-                            skippedCities++;
-                            continue;
-                        }
-
-                        if (typeof data.DZIEN === 'undefined') {
-                            console.warn(`Miasto ${city}: Brak wartości DZIEN`);
-                            skippedCities++;
-                            continue;
-                        }
-
-                        if (typeof data.max === 'undefined') {
-                            console.warn(`Miasto ${city}: Brak wartości max`);
-                            skippedCities++;
-                            continue;
-                        }
-
-                        // Debugowanie: pokaż dane dla miasta
-                        console.log(`Miasto ${city}:`, data);
-
-                        // Pobierz znormalizowaną nazwę miasta
-                        let normalizedCity = normalizeCity(city);
-                        console.log(`  Znormalizowana nazwa: ${normalizedCity}`);
-
-                        // Jeśli bezpośrednia normalizacja nie działa, spróbuj znaleźć przez uproszczoną nazwę
-                        if (!cities.includes(normalizedCity)) {
-                            const simplifiedImportCityName = simplifyName(city);
-                            console.log(`  Uproszczona nazwa: ${simplifiedImportCityName}`);
-
-                            if (appCityMap[simplifiedImportCityName]) {
-                                normalizedCity = appCityMap[simplifiedImportCityName];
-                                console.log(`  Znaleziono przez uproszczoną nazwę: ${normalizedCity}`);
-                            } else {
-                                // Ostatnia próba - sprawdź podobieństwo nazw
-                                const foundCity = cities.find(c =>
-                                    simplifyName(c).includes(simplifiedImportCityName) ||
-                                    simplifiedImportCityName.includes(simplifyName(c))
-                                );
-
-                                if (foundCity) {
-                                    normalizedCity = foundCity;
-                                    console.log(`  Znaleziono przez podobieństwo: ${normalizedCity}`);
-                                } else {
-                                    console.warn(`  Nie znaleziono odpowiednika dla miasta: ${city}`);
-                                    skippedCities++;
-                                    continue;
-                                }
-                            }
-                        }
-
-                        // Obsługa specjalnych przypadków (np. DZIEN: "0/0")
-                        let conditionDay = String(data.DZIEN || 0);
-                        if (conditionDay.includes('/')) {
-                            conditionDay = conditionDay.split('/')[0];
-                            console.log(`  Skorygowano wartość DZIEN z "${data.DZIEN}" na "${conditionDay}"`);
-                        }
-
-                        // Obsługa wartości liczbowych i tekstowych 
-                        const tempDay = typeof data.max === 'number' ? String(data.max) : String(data.max ?? "0");
-                        const tempNight = typeof data["1"] === 'number' ? String(data["1"]) : String(data["1"] ?? "0");
-                        const conditionNight = String(data["10"] ?? 0);
-
-                        console.log(`  Konwersja wartości: tempDay=${tempDay}, tempNight=${tempNight}, conditionDay=${conditionDay}, conditionNight=${conditionNight}`);
-
-                        // Przekształcenie danych do formatu aplikacji
-                        convertedData[normalizedCity] = {
-                            tempDay: tempDay,
-                            tempNight: tempNight,
-                            conditionDay: conditionDay,
-                            conditionNight: conditionNight
-                        };
-
-                        importedCities++;
-                    } catch (cityError) {
-                        console.error(`Błąd przetwarzania miasta ${city}:`, cityError);
-                        errorCities++;
-                    }
-                }
-
-                // Jeśli nie zaimportowano żadnych danych, przywróć stare
-                if (importedCities === 0) {
-                    showNotification('Nie udało się zaimportować żadnych danych', 'error');
-                    return;
-                }
-
-                // Podsumowanie działania
-                console.log('Zaimportowano:', convertedData);
-                console.log(`Statystyki importu: zaimportowano ${importedCities} miast, pominięto ${skippedCities} miast, błędy przy ${errorCities} miastach`);
-
-                // Zapisz dane i zaktualizuj interfejs
-                weatherData = convertedData;
+                weatherData = importResult.convertedData;
                 populateTable();
 
-                // Zapisz w localStorage dopiero po pomyślnym zaimportowaniu
                 try {
                     saveToLocalStorage();
                     console.log('Dane zapisane w localStorage');
@@ -356,10 +366,8 @@ function importWeatherData(event) {
                     showNotification('Dane zaimportowane, ale nie mogły zostać zapisane w pamięci podręcznej', 'warning');
                 }
 
-                // Pokaż podsumowanie importu
-                const summary = `Zaimportowano ${importedCities} miast. Pominięto ${skippedCities} miast.`;
+                const summary = `Zaimportowano ${importResult.stats.importedCities} miast. Pominięto ${importResult.stats.skippedCities} miast.`;
                 showNotification(`Dane pogodowe zaimportowane pomyślnie. ${summary}`, 'success');
-
             } catch (parsingError) {
                 console.error('Błąd parsowania JSON:', parsingError);
                 showNotification('Błąd parsowania pliku. Szczegóły w konsoli deweloperskiej.', 'error');
@@ -385,26 +393,25 @@ function exportData(format) {
             showNotification('Brak danych do eksportu', 'warning');
             return;
         }
-        
+
         const data = {};
 
         rows.forEach(row => {
             if (!row || !row.cells || row.cells.length < 6) return;
-            
+
             const city = row.cells[1].innerText;
             const selectNight = row.cells[2].querySelector('select');
             const selectTempNight = row.cells[3].querySelector('select');
             const selectDay = row.cells[4].querySelector('select');
             const selectTempDay = row.cells[5].querySelector('select');
-            
+
             if (!selectNight || !selectTempNight || !selectDay || !selectTempDay) return;
-            
+
             const conditionNight = selectNight.value;
             const tempNight = selectTempNight.value;
             const conditionDay = selectDay.value;
             const tempDay = selectTempDay.value;
 
-            // Walidacja danych przed eksportem
             if (!conditionNight || !conditionDay) {
                 showNotification(`Brakujące dane pogodowe dla miasta: ${city}`, 'error');
                 throw new Error(`Brakujące dane pogodowe dla miasta: ${city}`);
@@ -475,12 +482,7 @@ function exportAsXml(data) {
 
 function exportAsJson(data) {
     try {
-        // Format wymagany przez system zewnętrzny:
-        // [
-        //   {
-        //     "Bydgoszcz": { "1": 1, "10": "4", "DZIEN": "10", "max": "3" }
-        //   }
-        // ]
+        // Zostawiam eksport w starym formacie dla kompatybilności wstecznej
         const output = [{}];
 
         Object.entries(data).forEach(([city, cityData]) => {
@@ -489,7 +491,7 @@ function exportAsJson(data) {
                 "1": Number.isFinite(Number(cityData.tempNight)) ? Number(cityData.tempNight) : 0,
                 "10": String(cityData.conditionNight ?? 0),
                 "DZIEN": String(cityData.conditionDay ?? 0),
-                "max": String(cityData.tempDay ?? 0)
+                "max": Number.isFinite(Number(cityData.tempDay)) ? Number(cityData.tempDay) : 0
             };
         });
 
@@ -511,7 +513,6 @@ function exportAllFormats() {
         showNotification('Eksportowano dane we wszystkich formatach', 'success');
     } catch (error) {
         console.error('Błąd podczas eksportu wszystkich formatów:', error);
-        // Powiadomienie już zostało wyświetlone w funkcji exportData
     }
 }
 
@@ -533,7 +534,6 @@ function resetData() {
 // Funkcja ustawiająca wartości domyślne
 function setDefaultValues() {
     try {
-        // Dane domyślne dla wszystkich miast
         weatherData = {
             "Szczecin": { tempDay: "4", tempNight: "-1", conditionDay: "2", conditionNight: "0" },
             "Gdańsk": { tempDay: "3", tempNight: "-2", conditionDay: "10", conditionNight: "4" },
@@ -570,158 +570,74 @@ function setDefaultValues() {
 // Funkcja obsługująca wklejanie JSON bezpośrednio do aplikacji
 function handlePasteJSON() {
     try {
-        // Stwórz dialog do wklejenia zawartości JSON
         const dialogContainer = document.createElement('div');
         dialogContainer.className = 'paste-dialog-container';
         dialogContainer.innerHTML = `
             <div class="paste-dialog">
                 <h3>Wklej zawartość pliku JSON</h3>
                 <p>Wklej poniżej zawartość pliku JSON:</p>
-                <textarea id="json-paste-area" rows="10" placeholder='[{"Bydgoszcz":{"1":1,"10":"4","DZIEN":"10","max":"3"}}]'></textarea>
+                <textarea id="json-paste-area" rows="10" placeholder='[{"Bydgoszcz":{"NOC":"1","min":-8,"DZIEN":"1","max":-4}}]'></textarea>
                 <div class="dialog-buttons">
                     <button id="paste-json-cancel" class="interactive-element">Anuluj</button>
                     <button id="paste-json-confirm" class="interactive-element">Importuj</button>
                 </div>
             </div>
         `;
-        
+
         document.body.appendChild(dialogContainer);
 
-        // Ustaw focus na pole wklejania (żeby Ctrl+V działało od razu)
         const pasteArea = document.getElementById('json-paste-area');
         if (pasteArea) {
             setTimeout(() => pasteArea.focus(), 0);
         }
 
-        // Obsługa przycisków
         document.getElementById('paste-json-cancel').addEventListener('click', () => {
             document.body.removeChild(dialogContainer);
         });
-        
+
         document.getElementById('paste-json-confirm').addEventListener('click', () => {
             const jsonText = document.getElementById('json-paste-area').value;
             document.body.removeChild(dialogContainer);
-            
+
             if (!jsonText.trim()) {
                 showNotification('Brak zawartości do importu', 'warning');
                 return;
             }
-            
+
             try {
-                // Najpierw wyczyść localStorage
-                forceClearLocalStorage();
-                
-                // Przetwórz wklejony JSON
                 let dataText = jsonText;
-                
-                // Usuń BOM jeśli istnieje (problem z kodowaniem UTF-8 z BOM)
+
                 if (dataText.charCodeAt(0) === 0xFEFF) {
                     dataText = dataText.slice(1);
                 }
-                
-                // Sprawdź czy to prawidłowy JSON
+
                 if (!dataText.trim().startsWith('[') && !dataText.trim().startsWith('{')) {
                     showNotification('Zawartość nie jest prawidłowym formatem JSON', 'error');
                     return;
                 }
-                
+
                 const importedData = JSON.parse(dataText);
-                
-                // Użyj tej samej logiki co w funkcji importWeatherData
-                if (!Array.isArray(importedData) || importedData.length === 0) {
-                    showNotification('Nieprawidłowy format danych - oczekiwano tablicy', 'error');
+                const importResult = convertImportedWeatherPayload(importedData);
+
+                if (!importResult.valid) {
+                    showNotification(importResult.message, 'error');
                     return;
                 }
-                
-                // Pobierz pierwszy element tablicy
-                const cityData = importedData[0];
-                
-                // Przygotuj nowy obiekt danych
-                const convertedData = {};
-                let importedCities = 0;
-                let skippedCities = 0;
-                
-                // Mapowanie miast
-                const appCityMap = {};
-                cities.forEach(city => {
-                    const simplifiedName = simplifyName(city);
-                    appCityMap[simplifiedName] = city;
-                });
-                
-                // Iteracja po miastach
-                for (const city in cityData) {
-                    const data = cityData[city];
-                    
-                    if (
-                        !data ||
-                        typeof data["10"] === 'undefined' ||
-                        typeof data["1"] === 'undefined' ||
-                        typeof data.DZIEN === 'undefined' ||
-                        typeof data.max === 'undefined'
-                    ) {
-                        console.warn(`Pomijanie miasta: ${city} (brakujące dane pogodowe)`);
-                        skippedCities++;
-                        continue;
-                    }
-                    
-                    let normalizedCity = normalizeCity(city);
-                    
-                    if (!cities.includes(normalizedCity)) {
-                        const simplifiedImportCityName = simplifyName(city);
-                        
-                        if (appCityMap[simplifiedImportCityName]) {
-                            normalizedCity = appCityMap[simplifiedImportCityName];
-                        } else {
-                            const foundCity = cities.find(c => 
-                                simplifyName(c).includes(simplifiedImportCityName) || 
-                                simplifiedImportCityName.includes(simplifyName(c))
-                            );
-                            
-                            if (foundCity) {
-                                normalizedCity = foundCity;
-                            } else {
-                                console.warn(`Pomijanie miasta: ${city} (nie znaleziono odpowiednika w aplikacji)`);
-                                skippedCities++;
-                                continue;
-                            }
-                        }
-                    }
-                    
-                    let conditionDay = String(data.DZIEN || 0);
-                    if (conditionDay.includes('/')) {
-                        conditionDay = conditionDay.split('/')[0];
-                    }
-                    
-                    convertedData[normalizedCity] = {
-                        tempDay: String(data.max ?? 0),
-                        tempNight: String(data["1"] ?? 0),
-                        conditionDay: conditionDay,
-                        conditionNight: String(data["10"] ?? 0)
-                    };
-                    
-                    importedCities++;
-                }
-                
-                if (importedCities === 0) {
-                    showNotification('Nie udało się zaimportować żadnych danych', 'error');
-                    return;
-                }
-                
-                // Zapisz dane i zaktualizuj interfejs
-                weatherData = convertedData;
+
+                forceClearLocalStorage();
+
+                weatherData = importResult.convertedData;
                 populateTable();
                 saveToLocalStorage();
-                
-                // Pokaż podsumowanie
-                const summary = `Zaimportowano ${importedCities} miast. Pominięto ${skippedCities} miast.`;
+
+                const summary = `Zaimportowano ${importResult.stats.importedCities} miast. Pominięto ${importResult.stats.skippedCities} miast.`;
                 showNotification(`Dane pogodowe zaimportowane pomyślnie. ${summary}`, 'success');
-                
             } catch (error) {
                 console.error('Błąd podczas przetwarzania JSON:', error);
                 showNotification('Błąd przetwarzania danych JSON. Sprawdź format.', 'error');
             }
         });
-        
+
     } catch (error) {
         console.error('Błąd podczas tworzenia dialogu wklejania JSON:', error);
         showNotification('Wystąpił błąd podczas otwierania dialogu', 'error');
